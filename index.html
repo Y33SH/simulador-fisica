@@ -1,0 +1,845 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#09131e">
+  <title>Compton Lab | Simulador interactivo</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #09131e;
+      --panel: #111f2d;
+      --panel-2: #152637;
+      --border: rgba(165, 190, 211, .13);
+      --text: #edf5fb;
+      --muted: #9aafc1;
+      --cyan: #54d6df;
+      --blue: #70aaff;
+      --orange: #ffb66d;
+      --green: #88e0ae;
+      --danger: #ff8e8e;
+      --mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-synthesis: none;
+      text-rendering: optimizeLegibility;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-width: 320px;
+      min-height: 100vh;
+      background:
+        radial-gradient(ellipse at 82% 0%, rgba(35, 91, 112, .20), transparent 38rem),
+        radial-gradient(ellipse at 0% 50%, rgba(27, 62, 94, .16), transparent 34rem),
+        var(--bg);
+    }
+
+    button, input, select { font: inherit; }
+
+    .shell { width: min(1180px, calc(100% - 40px)); margin: 0 auto; }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      padding: 27px 0 22px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .brand-mark {
+      display: grid;
+      width: 42px;
+      height: 42px;
+      place-items: center;
+      border: 1px solid rgba(84, 214, 223, .34);
+      border-radius: 13px;
+      color: var(--cyan);
+      background: rgba(84, 214, 223, .08);
+      font-size: 23px;
+      font-weight: 700;
+    }
+    .brand-name { font-size: 15px; font-weight: 750; letter-spacing: .02em; }
+    .brand-subtitle { margin-top: 3px; color: var(--muted); font-size: 12px; }
+    .header-tag {
+      padding: 7px 11px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      color: var(--muted);
+      font-size: 11px;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    main { padding: 42px 0 56px; }
+    .intro { margin-bottom: 26px; }
+    .eyebrow {
+      color: var(--cyan);
+      font-size: 11px;
+      font-weight: 750;
+      letter-spacing: .15em;
+      text-transform: uppercase;
+    }
+    h1 { margin: 9px 0 8px; font-size: clamp(29px, 5vw, 43px); letter-spacing: -.045em; }
+    .intro p { max-width: 680px; margin: 0; color: var(--muted); line-height: 1.65; }
+
+    .workspace {
+      display: grid;
+      grid-template-columns: minmax(270px, .76fr) minmax(0, 1.5fr);
+      gap: 18px;
+      align-items: start;
+    }
+
+    .panel {
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      background: linear-gradient(145deg, rgba(20, 37, 53, .97), rgba(15, 29, 43, .97));
+      box-shadow: 0 18px 48px rgba(0, 0, 0, .13);
+    }
+    .controls { padding: 22px; }
+    .panel-heading {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 22px;
+    }
+    .panel-heading h2 { margin: 0; font-size: 16px; }
+    .panel-heading p { margin: 5px 0 0; color: var(--muted); font-size: 12px; }
+    .step {
+      display: grid;
+      width: 27px;
+      height: 27px;
+      flex: 0 0 auto;
+      place-items: center;
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      color: var(--cyan);
+      font-family: var(--mono);
+      font-size: 12px;
+    }
+    .field { margin-top: 23px; }
+    .field-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+    label, .field-label { color: #dce8f1; font-size: 13px; font-weight: 650; }
+    .symbol { color: var(--muted); font-family: var(--mono); font-size: 12px; }
+    .input-row { display: flex; gap: 8px; }
+    .number-wrap { position: relative; flex: 1; }
+    input[type="number"], select {
+      width: 100%;
+      min-height: 43px;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      outline: none;
+      color: var(--text);
+      background: #0c1925;
+    }
+    input[type="number"]:focus, select:focus {
+      border-color: rgba(84, 214, 223, .68);
+      box-shadow: 0 0 0 3px rgba(84, 214, 223, .10);
+    }
+    select { width: 112px; cursor: pointer; }
+    input[type="range"] {
+      display: block;
+      width: 100%;
+      height: 18px;
+      margin: 12px 0 0;
+      accent-color: var(--cyan);
+      cursor: pointer;
+    }
+    .range-limits {
+      display: flex;
+      justify-content: space-between;
+      color: #8096a9;
+      font-family: var(--mono);
+      font-size: 10px;
+    }
+    .field-hint { margin-top: 8px; color: var(--muted); font-size: 11px; }
+    .angle-readout { color: var(--cyan); font-family: var(--mono); font-size: 13px; }
+
+    .formula-note {
+      margin-top: 23px;
+      padding: 13px 14px;
+      border: 1px solid var(--border);
+      border-radius: 11px;
+      color: var(--muted);
+      background: rgba(5, 14, 23, .36);
+      font-size: 11px;
+      line-height: 1.8;
+    }
+    .formula-note strong { color: #dce8f1; font-weight: 600; }
+    .formula-note .math { color: #c3d6e5; font-family: var(--mono); }
+
+    .right-column { display: grid; gap: 18px; min-width: 0; }
+    .diagram-panel { overflow: hidden; }
+    .diagram-heading { padding: 20px 21px 0; }
+    .diagram-heading h2 { margin: 0; font-size: 16px; }
+    .diagram-heading p { margin: 5px 0 0; color: var(--muted); font-size: 12px; }
+    .canvas-wrap { position: relative; width: 100%; padding: 8px 12px 0; }
+    canvas { display: block; width: 100%; height: 300px; }
+    .canvas-caption {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px 20px;
+      padding: 2px 21px 17px;
+      color: var(--muted);
+      font-size: 11px;
+    }
+    .legend-item { display: inline-flex; align-items: center; gap: 7px; }
+    .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+    .results-panel { padding: 20px; }
+    .results-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 15px;
+    }
+    .results-title h2 { margin: 0; font-size: 16px; }
+    .live-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--green);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+    .live-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+    .error-message {
+      min-height: 0;
+      margin: 0;
+      color: var(--danger);
+      font-size: 12px;
+    }
+    .error-message:not(:empty) { margin: -5px 0 13px; }
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .metric {
+      min-width: 0;
+      padding: 13px 13px 12px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: rgba(8, 19, 29, .45);
+    }
+    .metric-label { color: var(--muted); font-size: 11px; }
+    .metric-value {
+      overflow-wrap: anywhere;
+      margin-top: 8px;
+      font-family: var(--mono);
+      font-size: clamp(13px, 1.6vw, 17px);
+      font-weight: 650;
+      letter-spacing: -.04em;
+    }
+    .metric-unit { margin-top: 4px; color: #8197aa; font-size: 10px; }
+    .metric-detail { margin-top: 7px; color: #b7c8d6; font-family: var(--mono); font-size: 10px; }
+    .cyan { color: var(--cyan); }
+    .blue { color: var(--blue); }
+    .orange { color: var(--orange); }
+    .green { color: var(--green); }
+
+    .equations {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 9px;
+      margin-top: 13px;
+    }
+    .equation {
+      padding: 10px 12px;
+      border-radius: 10px;
+      color: #a9bdcd;
+      background: rgba(8, 19, 29, .38);
+      font-family: var(--mono);
+      font-size: 11px;
+      line-height: 1.6;
+    }
+    .equation strong { color: #e2edf5; font-weight: 550; }
+
+    .constants {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px 17px;
+      margin-top: 19px;
+      padding-top: 15px;
+      border-top: 1px solid var(--border);
+      color: #8299ac;
+      font-size: 10px;
+    }
+    .constants span { font-family: var(--mono); }
+    footer {
+      padding: 18px 0 26px;
+      border-top: 1px solid var(--border);
+      color: #8196a8;
+      font-size: 11px;
+      line-height: 1.7;
+    }
+    footer strong { color: #c5d5e2; font-weight: 600; }
+
+    @media (max-width: 850px) {
+      .workspace { grid-template-columns: 1fr; }
+      .controls { order: 0; }
+      .right-column { order: 1; }
+      .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 520px) {
+      .shell { width: min(100% - 26px, 1180px); }
+      header { padding: 18px 0; }
+      .header-tag { display: none; }
+      main { padding-top: 29px; }
+      .controls, .results-panel { padding: 17px; }
+      .diagram-heading { padding: 17px 17px 0; }
+      .canvas-wrap { padding-right: 5px; padding-left: 5px; }
+      canvas { height: 250px; }
+      .canvas-caption { padding-right: 17px; padding-left: 17px; }
+      .metrics { gap: 8px; }
+      .metric { padding: 11px; }
+      .equations { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header>
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">γ</div>
+        <div>
+          <div class="brand-name">COMPTON LAB</div>
+          <div class="brand-subtitle">Laboratorio interactivo de física moderna</div>
+        </div>
+      </div>
+      <div class="header-tag">Capítulo 04 · Rayos X</div>
+    </header>
+
+    <main>
+      <section class="intro" aria-labelledby="page-title">
+        <div class="eyebrow">Dispersión de fotones</div>
+        <h1 id="page-title">Explora el efecto Compton</h1>
+        <p>
+          Ajusta la longitud de onda y el ángulo de dispersión. Observa cómo se
+          transfiere energía y momento al electrón en tiempo real.
+        </p>
+      </section>
+
+      <div class="workspace">
+        <section class="panel controls" aria-labelledby="controls-title">
+          <div class="panel-heading">
+            <div>
+              <h2 id="controls-title">Parámetros del experimento</h2>
+              <p>Modifica las condiciones del fotón incidente.</p>
+            </div>
+            <span class="step" aria-hidden="true">01</span>
+          </div>
+
+          <div class="field">
+            <div class="field-top">
+              <label for="wavelength">Longitud de onda inicial</label>
+              <span class="symbol">λ₀</span>
+            </div>
+            <div class="input-row">
+              <div class="number-wrap">
+                <input id="wavelength" type="number" min="0.005" max="5" step="any"
+                  value="0.05" inputmode="decimal" aria-describedby="wavelength-hint">
+              </div>
+              <select id="unit" aria-label="Unidad de longitud de onda">
+                <option value="angstrom">Å</option>
+                <option value="nm">nm</option>
+                <option value="pm">pm</option>
+              </select>
+            </div>
+            <input id="wavelength-range" type="range" min="0.005" max="5"
+              step="0.001" value="0.05" aria-label="Ajustar longitud de onda inicial">
+            <div class="range-limits">
+              <span id="lambda-min">0.005 Å</span>
+              <span id="lambda-max">5 Å</span>
+            </div>
+            <div id="wavelength-hint" class="field-hint">
+              Longitud de onda del fotón antes del choque.
+            </div>
+          </div>
+
+          <div class="field">
+            <div class="field-top">
+              <label for="angle">Ángulo del fotón dispersado</label>
+              <span class="angle-readout"><span id="angle-value">65</span>°</span>
+            </div>
+            <input id="angle" type="range" min="0" max="180" step="1" value="65"
+              aria-label="Ángulo de dispersión del fotón">
+            <div class="range-limits"><span>0°</span><span>180°</span></div>
+            <div class="field-hint">θ se mide respecto a la dirección incidente.</div>
+          </div>
+
+          <div class="formula-note">
+            <strong>Desplazamiento Compton</strong><br>
+            <span class="math">Δλ = h/(mₑc) · (1 − cos θ)</span><br>
+            La energía y el momento se conservan en la colisión.
+          </div>
+        </section>
+
+        <div class="right-column">
+          <section class="panel diagram-panel" aria-labelledby="diagram-title">
+            <div class="diagram-heading">
+              <h2 id="diagram-title">Diagrama de dispersión</h2>
+              <p>Vectores de momento en el plano del choque.</p>
+            </div>
+            <div class="canvas-wrap">
+              <canvas id="diagram" role="img"
+                aria-label="Diagrama vectorial del fotón incidente, fotón dispersado y electrón de retroceso">
+                Diagrama de los vectores de momento del efecto Compton.
+              </canvas>
+            </div>
+            <div class="canvas-caption" aria-label="Leyenda del diagrama">
+              <span class="legend-item"><span class="legend-dot" style="background:#54d6df"></span>Fotón incidente p₀</span>
+              <span class="legend-item"><span class="legend-dot" style="background:#70aaff"></span>Fotón dispersado pᶠ</span>
+              <span class="legend-item"><span class="legend-dot" style="background:#ffb66d"></span>Electrón pₑ</span>
+              <span class="legend-item">θ: fotón · φ: electrón</span>
+            </div>
+          </section>
+
+          <section class="panel results-panel" aria-labelledby="results-title">
+            <div class="results-title">
+              <h2 id="results-title">Resultados del choque</h2>
+              <span class="live-badge"><span class="live-dot"></span>En vivo</span>
+            </div>
+            <p id="error-message" class="error-message" role="alert"></p>
+            <div id="metrics" class="metrics" aria-live="polite">
+              <article class="metric">
+                <div class="metric-label">Energía incidente E₀</div>
+                <div id="energy-initial-ev" class="metric-value cyan">—</div>
+                <div class="metric-unit">eV</div>
+                <div id="energy-initial-j" class="metric-detail">— J</div>
+              </article>
+              <article class="metric">
+                <div class="metric-label">Energía dispersada Eᶠ</div>
+                <div id="energy-final-ev" class="metric-value blue">—</div>
+                <div class="metric-unit">eV</div>
+                <div id="energy-final-j" class="metric-detail">— J</div>
+              </article>
+              <article class="metric">
+                <div class="metric-label">Longitud final λᶠ</div>
+                <div id="wavelength-final" class="metric-value">—</div>
+                <div class="metric-unit">m</div>
+                <div id="wavelength-shift" class="metric-detail">Δλ = — m</div>
+              </article>
+              <article class="metric">
+                <div class="metric-label">Momento incidente p₀</div>
+                <div id="momentum-initial" class="metric-value cyan">—</div>
+                <div class="metric-unit">kg·m/s</div>
+              </article>
+              <article class="metric">
+                <div class="metric-label">Momento dispersado pᶠ</div>
+                <div id="momentum-final" class="metric-value blue">—</div>
+                <div class="metric-unit">kg·m/s</div>
+              </article>
+              <article class="metric">
+                <div class="metric-label">Energía cinética Kₑ</div>
+                <div id="kinetic-ev" class="metric-value orange">—</div>
+                <div class="metric-unit">eV</div>
+                <div id="kinetic-j" class="metric-detail">— J</div>
+                <div id="kinetic-mev" class="metric-detail">— MeV</div>
+              </article>
+            </div>
+            <div class="equations">
+              <div class="equation"><strong>Ángulo del electrón</strong><br>φ = <span id="electron-angle">—</span>°</div>
+              <div class="equation"><strong>Conservación de energía</strong><br>Kₑ = E₀ − Eᶠ = <span id="energy-balance">—</span> eV</div>
+            </div>
+            <div class="constants" aria-label="Constantes físicas utilizadas">
+              <span>c = 299 792 458 m/s</span>
+              <span>h = 6.62607015 × 10⁻³⁴ J·s</span>
+              <span>mₑ = 9.1093837139 × 10⁻³¹ kg</span>
+              <span>1 eV = 1.602176634 × 10⁻¹⁹ J</span>
+            </div>
+          </section>
+        </div>
+      </div>
+    </main>
+
+    <footer>
+      <strong>Modelo idealizado:</strong> electrón inicialmente en reposo y libre.
+      La longitud de onda de Compton se calcula como h/(mₑc) con constantes SI.
+      Las longitudes de los vectores se representan a escala relativa.
+    </footer>
+  </div>
+
+  <script>
+    "use strict";
+
+    const CONSTANTS = Object.freeze({
+      c: 299792458,
+      h: 6.62607015e-34,
+      electronMass: 9.1093837139e-31,
+      joulesPerEv: 1.602176634e-19
+    });
+    const UNITS = Object.freeze({
+      angstrom: { meters: 1e-10, label: "Å", min: 0.005, max: 5, step: 0.001 },
+      nm: { meters: 1e-9, label: "nm", min: 0.0005, max: 0.5, step: 0.0001 },
+      pm: { meters: 1e-12, label: "pm", min: 0.5, max: 500, step: 0.1 }
+    });
+
+    const elements = {
+      wavelength: document.getElementById("wavelength"),
+      wavelengthRange: document.getElementById("wavelength-range"),
+      unit: document.getElementById("unit"),
+      angle: document.getElementById("angle"),
+      angleValue: document.getElementById("angle-value"),
+      error: document.getElementById("error-message"),
+      canvas: document.getElementById("diagram")
+    };
+
+    function format(value, digits = 5) {
+      if (!Number.isFinite(value)) return "—";
+      return value.toExponential(digits);
+    }
+
+    function calculate(lambda0, angleDegrees) {
+      if (!Number.isFinite(lambda0) || lambda0 <= 0) {
+        throw new RangeError("La longitud de onda debe ser positiva y finita.");
+      }
+      if (!Number.isFinite(angleDegrees) || angleDegrees < 0 || angleDegrees > 180) {
+        throw new RangeError("El ángulo debe estar entre 0° y 180°.");
+      }
+
+      const theta = angleDegrees * Math.PI / 180;
+      const comptonWavelength = CONSTANTS.h
+        / (CONSTANTS.electronMass * CONSTANTS.c);
+      const lambdaF = lambda0 + comptonWavelength * (1 - Math.cos(theta));
+      const energy0J = CONSTANTS.h * CONSTANTS.c / lambda0;
+      const energyFJ = CONSTANTS.h * CONSTANTS.c / lambdaF;
+      const kineticJ = energy0J - energyFJ;
+      const p0 = CONSTANTS.h / lambda0;
+      const pf = CONSTANTS.h / lambdaF;
+      const electronPx = p0 - pf * Math.cos(theta);
+      const electronPy = pf * Math.sin(theta);
+      const electronMomentum = Math.hypot(electronPx, electronPy);
+      const phi = Math.atan2(electronPy, electronPx);
+
+      if (![lambdaF, energy0J, energyFJ, kineticJ, p0, pf, phi]
+        .every(Number.isFinite) || lambdaF <= 0 || kineticJ < 0) {
+        throw new RangeError("Los parámetros producen un resultado fuera del dominio físico.");
+      }
+
+      return {
+        lambda0,
+        lambdaF,
+        shift: lambdaF - lambda0,
+        theta,
+        angleDegrees,
+        energy0J,
+        energyFJ,
+        kineticJ,
+        energy0Ev: energy0J / CONSTANTS.joulesPerEv,
+        energyFEv: energyFJ / CONSTANTS.joulesPerEv,
+        kineticEv: kineticJ / CONSTANTS.joulesPerEv,
+        p0,
+        pf,
+        electronMomentum,
+        electronAngle: phi,
+        electronAngleDegrees: phi * 180 / Math.PI
+      };
+    }
+
+    function updateText(result) {
+      document.getElementById("energy-initial-ev").textContent =
+        format(result.energy0Ev);
+      document.getElementById("energy-initial-j").textContent =
+        format(result.energy0J) + " J";
+      document.getElementById("energy-final-ev").textContent =
+        format(result.energyFEv);
+      document.getElementById("energy-final-j").textContent =
+        format(result.energyFJ) + " J";
+      document.getElementById("wavelength-final").textContent =
+        format(result.lambdaF);
+      document.getElementById("wavelength-shift").textContent =
+        "Δλ = " + format(result.shift) + " m";
+      document.getElementById("momentum-initial").textContent =
+        format(result.p0);
+      document.getElementById("momentum-final").textContent =
+        format(result.pf);
+      document.getElementById("kinetic-ev").textContent =
+        format(result.kineticEv);
+      document.getElementById("kinetic-j").textContent =
+        format(result.kineticJ) + " J";
+      document.getElementById("kinetic-mev").textContent =
+        format(result.kineticEv / 1e6) + " MeV";
+      document.getElementById("electron-angle").textContent =
+        result.electronAngleDegrees.toFixed(3);
+      document.getElementById("energy-balance").textContent =
+        format(result.kineticEv);
+    }
+
+    function clearResults() {
+      document.querySelectorAll(".metric-value, .metric-detail")
+        .forEach((node) => { node.textContent = "—"; });
+      document.getElementById("electron-angle").textContent = "—";
+      document.getElementById("energy-balance").textContent = "—";
+      drawDiagram(null);
+    }
+
+    function showError(message) {
+      elements.error.textContent = message;
+      clearResults();
+    }
+
+    function update() {
+      const unit = UNITS[elements.unit.value];
+      const value = Number(elements.wavelength.value);
+      const angle = Number(elements.angle.value);
+      elements.angleValue.textContent = String(angle);
+
+      if (elements.wavelength.value.trim() === "" || !Number.isFinite(value)) {
+        showError("Escribe una longitud de onda numérica.");
+        return;
+      }
+      if (value <= 0) {
+        showError("La longitud de onda debe ser mayor que cero.");
+        return;
+      }
+      if (value < unit.min || value > unit.max) {
+        showError(
+          "El valor debe estar entre " + unit.min + " y " + unit.max + " "
+          + unit.label + "."
+        );
+        return;
+      }
+
+      try {
+        const result = calculate(value * unit.meters, angle);
+        elements.error.textContent = "";
+        updateText(result);
+        drawDiagram(result);
+      } catch (error) {
+        if (error instanceof RangeError) {
+          showError(error.message);
+          return;
+        }
+        throw error;
+      }
+    }
+
+    function updateRangeLimits() {
+      const unit = UNITS[elements.unit.value];
+      elements.wavelength.min = String(unit.min);
+      elements.wavelength.max = String(unit.max);
+      elements.wavelengthRange.min = String(unit.min);
+      elements.wavelengthRange.max = String(unit.max);
+      elements.wavelengthRange.step = String(unit.step);
+      document.getElementById("lambda-min").textContent =
+        unit.min + " " + unit.label;
+      document.getElementById("lambda-max").textContent =
+        unit.max + " " + unit.label;
+    }
+
+    function onRangeInput() {
+      elements.wavelength.value = elements.wavelengthRange.value;
+      update();
+    }
+
+    function onNumberInput() {
+      const parsed = Number(elements.wavelength.value);
+      const unit = UNITS[elements.unit.value];
+      if (elements.wavelength.value.trim() !== "" && Number.isFinite(parsed)
+        && parsed >= unit.min && parsed <= unit.max) {
+        elements.wavelengthRange.value = String(parsed);
+      }
+      update();
+    }
+
+    function onUnitChange() {
+      const oldUnit = UNITS[elements.unit.dataset.previous || "angstrom"];
+      const newUnit = UNITS[elements.unit.value];
+      const oldValue = Number(elements.wavelength.value);
+      const meters = Number.isFinite(oldValue) && oldValue > 0
+        ? oldValue * oldUnit.meters
+        : 0.05 * UNITS.angstrom.meters;
+      let converted = meters / newUnit.meters;
+      converted = Math.min(newUnit.max, Math.max(newUnit.min, converted));
+      elements.unit.dataset.previous = elements.unit.value;
+      updateRangeLimits();
+      elements.wavelength.value = String(Number(converted.toPrecision(7)));
+      elements.wavelengthRange.value = elements.wavelength.value;
+      update();
+    }
+
+    function drawArrow(ctx, fromX, fromY, toX, toY, color, label, labelOffset = 14) {
+      const angle = Math.atan2(toY - fromY, toX - fromX);
+      const headLength = 9;
+      ctx.strokeStyle = color;
+      ctx.fillStyle = color;
+      ctx.lineWidth = 2.5;
+      ctx.lineCap = "round";
+      ctx.beginPath();
+      ctx.moveTo(fromX, fromY);
+      ctx.lineTo(toX, toY);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(toX, toY);
+      ctx.lineTo(
+        toX - headLength * Math.cos(angle - Math.PI / 7),
+        toY - headLength * Math.sin(angle - Math.PI / 7)
+      );
+      ctx.lineTo(
+        toX - headLength * Math.cos(angle + Math.PI / 7),
+        toY - headLength * Math.sin(angle + Math.PI / 7)
+      );
+      ctx.closePath();
+      ctx.fill();
+
+      const midX = (fromX + toX) / 2;
+      const midY = (fromY + toY) / 2;
+      const normalX = -Math.sin(angle);
+      const normalY = Math.cos(angle);
+      ctx.font = "600 12px system-ui, sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillStyle = color;
+      ctx.fillText(label, midX + normalX * labelOffset, midY + normalY * labelOffset);
+    }
+
+    function drawDiagram(result) {
+      const canvas = elements.canvas;
+      const rect = canvas.getBoundingClientRect();
+      if (!rect.width || !rect.height) return;
+      const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+      canvas.width = Math.round(rect.width * dpr);
+      canvas.height = Math.round(rect.height * dpr);
+      const ctx = canvas.getContext("2d");
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+      const width = rect.width;
+      const height = rect.height;
+      ctx.clearRect(0, 0, width, height);
+
+      ctx.strokeStyle = "rgba(151, 177, 198, .07)";
+      ctx.lineWidth = 1;
+      for (let x = 20; x < width; x += 28) {
+        for (let y = 16; y < height; y += 28) {
+          ctx.beginPath();
+          ctx.arc(x, y, 1, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+      }
+
+      if (!result) {
+        ctx.fillStyle = "#8196a8";
+        ctx.font = "13px system-ui, sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText("Corrige los parámetros para visualizar los vectores", width / 2, height / 2);
+        return;
+      }
+
+      const originX = width * 0.51;
+      const originY = height * 0.52;
+      const radius = Math.max(50, Math.min(width * 0.40, height * 0.37));
+      const maxMomentum = Math.max(result.p0, result.pf, result.electronMomentum);
+      const scale = radius / maxMomentum;
+      const incomingLength = result.p0 * scale;
+      const pfLength = result.pf * scale;
+      const electronLength = result.electronMomentum * scale;
+      const theta = result.theta;
+      const phi = result.electronAngle;
+
+      ctx.setLineDash([4, 6]);
+      ctx.strokeStyle = "rgba(151, 177, 198, .27)";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(Math.max(9, originX - radius - 15), originY);
+      ctx.lineTo(Math.min(width - 9, originX + radius + 15), originY);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      ctx.fillStyle = "#edf5fb";
+      ctx.beginPath();
+      ctx.arc(originX, originY, 4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#9aafc1";
+      ctx.font = "11px system-ui, sans-serif";
+      ctx.textAlign = "left";
+      ctx.fillText("choque", originX + 8, originY + 17);
+
+      drawArrow(
+        ctx,
+        originX - incomingLength,
+        originY,
+        originX,
+        originY,
+        "#54d6df",
+        "p₀",
+        -13
+      );
+      drawArrow(
+        ctx,
+        originX,
+        originY,
+        originX + pfLength * Math.cos(theta),
+        originY + pfLength * Math.sin(theta),
+        "#70aaff",
+        "pᶠ",
+        15
+      );
+      drawArrow(
+        ctx,
+        originX,
+        originY,
+        originX + electronLength * Math.cos(phi),
+        originY - electronLength * Math.sin(phi),
+        "#ffb66d",
+        "pₑ",
+        15
+      );
+
+      drawAngleArc(ctx, originX, originY, 31, 0, theta, "#70aaff", "θ");
+      drawAngleArc(ctx, originX, originY, 47, -phi, 0, "#ffb66d", "φ");
+    }
+
+    function drawAngleArc(ctx, x, y, radius, start, end, color, label) {
+      ctx.strokeStyle = color;
+      ctx.globalAlpha = 0.8;
+      ctx.lineWidth = 1.3;
+      ctx.beginPath();
+      ctx.arc(x, y, radius, start, end, end < start);
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+      const middle = (start + end) / 2;
+      ctx.fillStyle = color;
+      ctx.font = "600 11px system-ui, sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(
+        label,
+        x + (radius + 11) * Math.cos(middle),
+        y + (radius + 11) * Math.sin(middle)
+      );
+    }
+
+    elements.unit.dataset.previous = elements.unit.value;
+    elements.wavelength.addEventListener("input", onNumberInput);
+    elements.wavelengthRange.addEventListener("input", onRangeInput);
+    elements.unit.addEventListener("change", onUnitChange);
+    elements.angle.addEventListener("input", update);
+    window.addEventListener("resize", () => {
+      if (!elements.error.textContent) update();
+      else drawDiagram(null);
+    });
+
+    updateRangeLimits();
+    update();
+  </script>
+</body>
+</html>
